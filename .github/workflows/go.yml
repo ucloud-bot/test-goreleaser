@@ -31,14 +31,17 @@ jobs:
           go-version: 1.14
       -
         name: Import GPG key
-        shell: bash
+        id: import_gpg
+        uses: paultyng/ghaction-import-gpg@v2.1.0
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-        run: echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+          PASSPHRASE: ${{ secrets.DEV_TOOLKIT_TOKEN }}
       -
         name: Run GoReleaser
-        shell: bash
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          version: latest
+          args: release --rm-dist
         env:
-          GITHUB_TOKEN: ${{ secrets.DEV_TOOLKIT_TOKEN }}
-          GPG_FINGERPRINT: ${{ secrets.GPG_FINGERPRINT }}
-        run: make release-publish
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
